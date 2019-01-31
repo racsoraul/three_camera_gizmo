@@ -9,6 +9,10 @@
   align-items: center;
 }
 
+.App h1 {
+  text-align: center;
+}
+
 .App h1 span {
   color: #a25b5b;
 }

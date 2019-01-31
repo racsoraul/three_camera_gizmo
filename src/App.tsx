@@ -3,6 +3,7 @@ import "./App.css";
 import * as THREE from "three";
 import OrbitControls from "three-orbitcontrols";
 import { Vector3 } from "three";
+import { debounce } from "./utils";
 
 interface IProps {}
 
@@ -10,12 +11,13 @@ class App extends Component<IProps> {
   private containerRef = React.createRef<HTMLDivElement>();
   private renderer: THREE.Renderer;
   private scene: THREE.Scene;
-  private camera!: THREE.Camera;
+  private camera!: THREE.PerspectiveCamera;
   private controls!: THREE.OrbitControls;
   private frameId: number;
 
   constructor(props: IProps) {
     super(props);
+    window.addEventListener("resize", this.onWindowsResize, false);
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -30,14 +32,14 @@ class App extends Component<IProps> {
       const containerWidth = this.containerRef.current.clientWidth;
       const containerHeight = this.containerRef.current.clientHeight;
       const aspect = containerWidth / containerHeight;
-      const range = 50;
+      const RANGE = 50;
 
       this.renderer.setSize(containerWidth, containerHeight);
 
       this.containerRef.current.appendChild(this.renderer.domElement);
 
       this.camera = new THREE.PerspectiveCamera(45, aspect, 1, 10000);
-      this.camera.position.set(0, 0, range * 2);
+      this.camera.position.set(0, 0, RANGE * 2);
       this.camera.lookAt(new Vector3(0, 0, 0));
 
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
@@ -45,7 +47,6 @@ class App extends Component<IProps> {
 
       this.scene.add(this.createSimpleCube(0x000000));
 
-      // Start
       this.animate();
     }
   }
@@ -65,14 +66,34 @@ class App extends Component<IProps> {
     );
   }
 
+  /**
+   * Start rendering the scene.
+   */
   private animate = () => {
     this.frameId = window.requestAnimationFrame(this.animate);
     this.renderer.render(this.scene, this.camera);
   };
 
+  /**
+   * Stop rendering.
+   */
   private stop() {
     window.cancelAnimationFrame(this.frameId);
   }
+
+  /**
+   * Adjust canvas size on windows resizing.
+   */
+  private onWindowsResize = debounce(100, () => {
+    if (this.containerRef.current) {
+      const containerWidth = this.containerRef.current.clientWidth;
+      const containerHeight = this.containerRef.current.clientHeight;
+
+      this.camera.aspect = containerWidth / containerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(containerWidth, containerHeight);
+    }
+  });
 
   /**
    * Returns cube of the specified color. Dimensions are:
