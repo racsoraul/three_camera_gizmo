@@ -8,7 +8,7 @@ interface IProps {}
 
 class App extends Component<IProps> {
   private containerRef = React.createRef<HTMLDivElement>();
-  private renderer: THREE.Renderer;
+  private renderer: THREE.WebGLRenderer;
   private scene: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private controls!: THREE.OrbitControls;
@@ -39,6 +39,7 @@ class App extends Component<IProps> {
       const RANGE = 50;
 
       this.renderer.setSize(containerWidth, containerHeight);
+      this.renderer.setClearColor(0x101010);
 
       this.containerRef.current.appendChild(this.renderer.domElement);
 
@@ -49,7 +50,7 @@ class App extends Component<IProps> {
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
       this.controls.enableKeys = false;
 
-      this.scene.add(this.createSimpleCube(0x000000));
+      this.scene.add(this.createSimpleCube(0x00000));
 
       this.animate();
     }
@@ -62,9 +63,9 @@ class App extends Component<IProps> {
   public render() {
     return (
       <div className="App">
-        {/* <h1>
+        <h1>
           Object Picking - Test to get the <span>gizmo</span> working
-        </h1> */}
+        </h1>
         <div id="gizmo" ref={this.containerRef} />
       </div>
     );
@@ -137,10 +138,15 @@ class App extends Component<IProps> {
      * (-1 to +1) for both components.
      */
     if (this.containerRef.current) {
+      const rect = this.containerRef.current.getBoundingClientRect();
       this.mouse.x =
-        (event.clientX / this.containerRef.current.clientWidth) * 2 - 1;
+        ((event.clientX - rect.left) / this.containerRef.current.clientWidth) *
+          2 -
+        1;
       this.mouse.y =
-        -(event.clientY / this.containerRef.current.clientHeight) * 2 + 1;
+        -((event.clientY - rect.top) / this.containerRef.current.clientHeight) *
+          2 +
+        1;
     }
   };
 }
