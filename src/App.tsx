@@ -5,6 +5,12 @@ import OrbitControls from "three-orbitcontrols";
 import { debounce } from "./utils";
 
 interface IProps {}
+enum CommandTypes {
+  ROTATE_TOP,
+  ROTATE_BOTTOM,
+  ROTATE_LEFT,
+  ROTATE_RIGHT
+}
 
 class App extends Component<IProps> {
   private containerRef = React.createRef<HTMLDivElement>();
@@ -15,10 +21,14 @@ class App extends Component<IProps> {
   private frameId: number;
   private raycaster: THREE.Raycaster;
   private mouse: THREE.Vector2;
+  private isMouseDown: boolean;
 
   constructor(props: IProps) {
     super(props);
     window.addEventListener("resize", this.onWindowsResize, false);
+    window.addEventListener("mousedown", this.onMouseDown, false);
+    window.addEventListener("mouseup", this.onMouseUp, false);
+
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -28,6 +38,7 @@ class App extends Component<IProps> {
     this.frameId = 0;
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2(-1, -1);
+    this.isMouseDown = false;
   }
 
   public componentDidMount() {
@@ -50,7 +61,15 @@ class App extends Component<IProps> {
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
       this.controls.enableKeys = false;
 
-      this.scene.add(this.createSimpleCube(0x00000));
+      const whiteCube = this.createSimpleCube();
+      whiteCube.position.x += 15;
+      whiteCube.userData = { command: CommandTypes.ROTATE_RIGHT };
+
+      const blackCube = this.createSimpleCube(0x000000);
+      blackCube.userData = { command: CommandTypes.ROTATE_LEFT };
+
+      this.scene.add(whiteCube);
+      this.scene.add(blackCube);
 
       this.animate();
     }
@@ -80,9 +99,9 @@ class App extends Component<IProps> {
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
     const intersects = this.raycaster.intersectObjects(this.scene.children);
-    for (let index = 0; index < intersects.length; index++) {
-      console.log(intersects[index].object.position);
-      //console.log(intersects[]);
+
+    if (typeof intersects[0] !== "undefined" && this.isMouseDown) {
+      this.gizmoAction(intersects[0].object.userData.command);
     }
 
     this.renderer.render(this.scene, this.camera);
@@ -118,6 +137,16 @@ class App extends Component<IProps> {
     return mesh.add(edgesMesh);
   }
 
+  private gizmoAction = debounce(100, (command: CommandTypes) => {
+    switch (command) {
+      case CommandTypes.ROTATE_TOP:
+      case CommandTypes.ROTATE_BOTTOM:
+      case CommandTypes.ROTATE_RIGHT:
+      case CommandTypes.ROTATE_LEFT:
+        console.log(command);
+    }
+  });
+
   /**
    * Adjust canvas size on windows resizing.
    */
@@ -139,15 +168,17 @@ class App extends Component<IProps> {
      */
     if (this.containerRef.current) {
       const rect = this.containerRef.current.getBoundingClientRect();
-      this.mouse.x =
-        ((event.clientX - rect.left) / this.containerRef.current.clientWidth) *
-          2 -
-        1;
-      this.mouse.y =
-        -((event.clientY - rect.top) / this.containerRef.current.clientHeight) *
-          2 +
-        1;
+      this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     }
+  };
+
+  private onMouseDown = (event: MouseEvent) => {
+    this.isMouseDown = true;
+  };
+
+  private onMouseUp = (event: MouseEvent) => {
+    this.isMouseDown = false;
   };
 }
 
