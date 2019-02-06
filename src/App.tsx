@@ -3,14 +3,26 @@ import "./App.css";
 import * as THREE from "three";
 import OrbitControls from "three-orbitcontrols";
 import { debounce } from "./utils";
+import { Vector3 } from "three";
 
 interface IProps {}
-enum CommandTypes {
-  ROTATE_TOP,
-  ROTATE_BOTTOM,
-  ROTATE_LEFT,
-  ROTATE_RIGHT
+enum ViewRotation {
+  TOP,
+  BOTTOM,
+  LEFT,
+  RIGHT,
+  FRONT,
+  BACK
 }
+
+enum Axes {
+  X,
+  Y,
+  Z
+}
+
+const RANGE = 40;
+const ORIGIN = new Vector3(0, 0, 0);
 
 class App extends Component<IProps> {
   private containerRef = React.createRef<HTMLDivElement>();
@@ -47,7 +59,6 @@ class App extends Component<IProps> {
       const containerWidth = this.containerRef.current.clientWidth;
       const containerHeight = this.containerRef.current.clientHeight;
       const aspect = containerWidth / containerHeight;
-      const RANGE = 50;
 
       this.renderer.setSize(containerWidth, containerHeight);
       this.renderer.setClearColor(0x101010);
@@ -56,20 +67,34 @@ class App extends Component<IProps> {
 
       this.camera = new THREE.PerspectiveCamera(45, aspect, 1, 10000);
       this.camera.position.set(0, 0, RANGE * 2);
-      this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+      this.camera.lookAt(ORIGIN);
 
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
       this.controls.enableKeys = false;
 
-      const whiteCube = this.createSimpleCube();
-      whiteCube.position.x += 15;
-      whiteCube.userData = { command: CommandTypes.ROTATE_RIGHT };
+      const rightRedCube = this.createSimpleCube(0x9c4c4c);
+      rightRedCube.position.x += 15;
+      rightRedCube.userData = { command: ViewRotation.RIGHT };
 
-      const blackCube = this.createSimpleCube(0x000000);
-      blackCube.userData = { command: CommandTypes.ROTATE_LEFT };
+      const leftRedCube = this.createSimpleCube(0x926d6d);
+      leftRedCube.position.x -= 15;
+      leftRedCube.userData = { command: ViewRotation.LEFT };
 
-      this.scene.add(whiteCube);
-      this.scene.add(blackCube);
+      const frontBlueCube = this.createSimpleCube(0x0000ff);
+      frontBlueCube.position.z += 15;
+      frontBlueCube.userData = { command: ViewRotation.FRONT };
+
+      const topGreenCube = this.createSimpleCube(0x00ff00);
+      topGreenCube.position.y += 15;
+      topGreenCube.userData = { command: ViewRotation.TOP };
+
+      this.scene.add(rightRedCube);
+      this.scene.add(leftRedCube);
+      this.scene.add(topGreenCube);
+      this.scene.add(frontBlueCube);
+
+      const axesHelper = new THREE.AxesHelper(40);
+      this.scene.add(axesHelper);
 
       this.animate();
     }
@@ -108,6 +133,36 @@ class App extends Component<IProps> {
   };
 
   /**
+   * Rotates the camera around the specified `axis` the amount
+   * of degrees specified.
+   * @param angle Degrees to rotate.
+   * @param axis Axis to rotate around. Default `Axes.Y`.
+   */
+  private rotateCamera(angle: number, axis: Axes = Axes.Y) {
+    this.camera.position.y = 0;
+    let z = 2 * RANGE,
+      y = 0,
+      x = 0;
+
+    switch (axis) {
+      case Axes.X:
+        this.camera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
+        this.camera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
+        break;
+      case Axes.Y:
+        this.camera.position.x = x * Math.cos(angle) + z * Math.sin(angle);
+        this.camera.position.z = z * Math.cos(angle) - x * Math.sin(angle);
+        break;
+      case Axes.Z:
+        throw Error(
+          "Unsupported rotation. Currently there's no reason to rotate around the Z axis."
+        );
+    }
+
+    this.camera.lookAt(ORIGIN);
+  }
+
+  /**
    * Stop rendering.
    */
   private stop() {
@@ -129,28 +184,37 @@ class App extends Component<IProps> {
     // Add wireframe
     const edgesGeometry = new THREE.EdgesGeometry(mesh.geometry);
     const edgesMaterial = new THREE.LineBasicMaterial({
-      color: 0xa25b5b,
-      linewidth: 4
+      color: 0xababab,
+      linewidth: 2.5
     });
     const edgesMesh = new THREE.LineSegments(edgesGeometry, edgesMaterial);
 
     return mesh.add(edgesMesh);
   }
 
-  private gizmoAction = debounce(100, (command: CommandTypes) => {
+  private gizmoAction = debounce(100, (command: ViewRotation) => {
     switch (command) {
-      case CommandTypes.ROTATE_TOP:
-      case CommandTypes.ROTATE_BOTTOM:
-      case CommandTypes.ROTATE_RIGHT:
-      case CommandTypes.ROTATE_LEFT:
-        console.log(command);
+      case ViewRotation.TOP:
+        this.rotateCamera(Math.PI / 2, Axes.X);
+      case ViewRotation.BOTTOM:
+        console.log("ROTATE BOTTOM");
+        break;
+      case ViewRotation.RIGHT:
+        this.rotateCamera(Math.PI / 2);
+        break;
+      case ViewRotation.LEFT:
+        this.rotateCamera(-Math.PI / 2);
+        break;
+      case ViewRotation.FRONT:
+        this.rotateCamera(0);
+        break;
     }
   });
 
   /**
    * Adjust canvas size on windows resizing.
    */
-  private onWindowsResize = debounce(100, () => {
+  private onWindowsResize = debounce(50, () => {
     if (this.containerRef.current) {
       const containerWidth = this.containerRef.current.clientWidth;
       const containerHeight = this.containerRef.current.clientHeight;
