@@ -11,7 +11,7 @@ import {
 } from "three";
 
 /** How far from the origin the camera will be. */
-export const CAMERA_DISTANCE = 10;
+export const CAMERA_DISTANCE = 6;
 /** Where the camera must keep looking at. */
 export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
 
@@ -57,14 +57,20 @@ export const debounce: <R>(
 };
 
 /**
- * Returns cube of the specified color. Dimensions are:
+ * Returns cube of the specified color. Default dimensions are:
  * `width = 1`
  * `height = 1`
  * `depth = 1`
  * @param color hex number.
  */
-export function createSimpleCube(color: number = 0xffffff): Mesh {
-  const geometry = new BoxGeometry(1, 1, 1);
+export function createCube(
+  color: number = 0xffffff,
+  width: number = 1,
+  height: number = 1,
+  depth: number = 1
+): Mesh {
+  //TODO: change to BufferGeometry
+  const geometry = new BoxGeometry(width, height, depth);
   const material = new MeshBasicMaterial({ color });
   const mesh = new Mesh(geometry, material);
 
@@ -119,27 +125,27 @@ export function rotateCamera(
  * @param scene scene to add the camera gizmo.
  */
 export function addCameraGizmo(scene: Scene) {
-  const rightRedCube = createSimpleCube(0x9c4c4c);
+  const rightRedCube = createCube(0x9c4c4c);
   rightRedCube.position.x += 1;
   rightRedCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_RIGHT };
 
-  const leftRedCube = createSimpleCube(0x926d6d);
+  const leftRedCube = createCube(0x926d6d);
   leftRedCube.position.x -= 1;
   leftRedCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_LEFT };
 
-  const frontBlueCube = createSimpleCube(0x0000ff);
+  const frontBlueCube = createCube(0x0000ff);
   frontBlueCube.position.z += 1;
   frontBlueCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_FRONT };
 
-  const backBlueCube = createSimpleCube(0x4c74c5);
+  const backBlueCube = createCube(0x4c74c5);
   backBlueCube.position.z -= 1;
   backBlueCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_BACK };
 
-  const topGreenCube = createSimpleCube(0x00ff00);
+  const topGreenCube = createCube(0x00ff00);
   topGreenCube.position.y += 1;
   topGreenCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_TOP };
 
-  const bottomGreenCube = createSimpleCube(0xc6f5c6);
+  const bottomGreenCube = createCube(0xc6f5c6);
   bottomGreenCube.position.y -= 1;
   bottomGreenCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_BOTTOM };
 

@@ -7,7 +7,8 @@ import {
   CAMERA_FOCUS_POINT,
   debounce,
   addCameraGizmo,
-  gizmoAction
+  gizmoAction,
+  createCube
 } from "./utils";
 
 interface IProps {}
@@ -19,6 +20,11 @@ class App extends Component<IProps> {
   private camera!: THREE.PerspectiveCamera;
   private controls!: THREE.OrbitControls;
   private frameId: number;
+
+  private gizmoRef = React.createRef<HTMLDivElement>();
+  private gizmoRenderer: THREE.WebGLRenderer;
+  private gizmoScene: THREE.Scene;
+  private gizmoCamera!: THREE.PerspectiveCamera;
   private raycaster: THREE.Raycaster;
   private mouse: THREE.Vector2;
   private isMouseDown: boolean;
@@ -26,8 +32,6 @@ class App extends Component<IProps> {
   constructor(props: IProps) {
     super(props);
     window.addEventListener("resize", this.onWindowsResize, false);
-    window.addEventListener("mousedown", this.onMouseDown, false);
-    window.addEventListener("mouseup", this.onMouseUp, false);
 
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -37,6 +41,13 @@ class App extends Component<IProps> {
     this.scene = new THREE.Scene();
     this.frameId = 0;
     this.raycaster = new THREE.Raycaster();
+
+    this.gizmoRenderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      devicePixelRatio: window.devicePixelRatio
+    });
+    this.gizmoScene = new THREE.Scene();
     this.mouse = new THREE.Vector2(-1, -1);
     this.isMouseDown = false;
   }
@@ -47,14 +58,25 @@ class App extends Component<IProps> {
         <h1>
           Object Picking - Test to get the <span>gizmo</span> working
         </h1>
-        <div id="gizmo" ref={this.containerRef} />
+        <div id="scene" ref={this.containerRef} />
+        <div id="gizmo" ref={this.gizmoRef} />
       </div>
     );
   }
 
   public componentDidMount() {
-    if (this.containerRef.current) {
+    if (this.containerRef.current && this.gizmoRef.current) {
       this.containerRef.current.addEventListener("mousemove", this.onMouseMove);
+      this.containerRef.current.addEventListener(
+        "mousedown",
+        this.onMouseDown,
+        false
+      );
+      this.containerRef.current.addEventListener(
+        "mouseup",
+        this.onMouseUp,
+        false
+      );
       const containerWidth = this.containerRef.current.clientWidth;
       const containerHeight = this.containerRef.current.clientHeight;
       const aspect = containerWidth / containerHeight;
@@ -71,7 +93,23 @@ class App extends Component<IProps> {
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
       this.controls.enableKeys = false;
 
-      addCameraGizmo(this.scene);
+      const rect = this.containerRef.current.getBoundingClientRect();
+      this.gizmoRef.current.style.top = `${rect.top + 3}px`;
+      this.gizmoRef.current.style.left = `${rect.left + 3}px`;
+
+      this.gizmoRenderer.setSize(
+        this.gizmoRef.current.clientWidth,
+        this.gizmoRef.current.clientHeight
+      );
+      this.gizmoRef.current.appendChild(this.gizmoRenderer.domElement);
+
+      this.gizmoCamera = new THREE.PerspectiveCamera(45, aspect, 1, 100);
+      this.gizmoCamera.up = this.camera.up;
+
+      addCameraGizmo(this.gizmoScene);
+
+      const cube = createCube(0xa25b5b);
+      this.scene.add(cube);
 
       this.animate();
     }
@@ -80,8 +118,18 @@ class App extends Component<IProps> {
   public componentWillUnmount() {
     window.cancelAnimationFrame(this.frameId);
     window.removeEventListener("resize", this.onWindowsResize, false);
-    window.removeEventListener("mousedown", this.onMouseDown, false);
-    window.removeEventListener("mouseup", this.onMouseUp, false);
+    if (this.containerRef.current) {
+      this.containerRef.current.removeEventListener(
+        "mousedown",
+        this.onMouseDown,
+        false
+      );
+      this.containerRef.current.removeEventListener(
+        "mouseup",
+        this.onMouseUp,
+        false
+      );
+    }
   }
 
   /**
@@ -98,7 +146,14 @@ class App extends Component<IProps> {
       gizmoAction(this.camera, intersects[0].object.userData.command);
     }
 
+    this.gizmoCamera.position.copy(this.camera.position);
+    this.gizmoCamera.position.sub(this.controls.target);
+    this.gizmoCamera.position.setLength(5);
+
+    this.gizmoCamera.lookAt(this.scene.position);
+
     this.renderer.render(this.scene, this.camera);
+    this.gizmoRenderer.render(this.gizmoScene, this.gizmoCamera);
   };
 
   /**
@@ -127,11 +182,11 @@ class App extends Component<IProps> {
     }
   };
 
-  private onMouseDown = (event: MouseEvent) => {
+  private onMouseDown = () => {
     this.isMouseDown = true;
   };
 
-  private onMouseUp = (event: MouseEvent) => {
+  private onMouseUp = () => {
     this.isMouseDown = false;
   };
 }
