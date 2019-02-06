@@ -6,10 +6,8 @@ import {
   CAMERA_DISTANCE,
   CAMERA_FOCUS_POINT,
   debounce,
-  rotateCamera,
-  ViewRotation,
-  Axes,
-  addCameraGizmo
+  addCameraGizmo,
+  gizmoAction
 } from "./utils";
 
 interface IProps {}
@@ -97,36 +95,11 @@ class App extends Component<IProps> {
     const intersects = this.raycaster.intersectObjects(this.scene.children);
 
     if (typeof intersects[0] !== "undefined" && this.isMouseDown) {
-      this.gizmoAction(intersects[0].object.userData.command);
+      gizmoAction(this.camera, intersects[0].object.userData.command);
     }
 
     this.renderer.render(this.scene, this.camera);
   };
-
-  private gizmoAction = debounce(100, (command: ViewRotation) => {
-    switch (command) {
-      case ViewRotation.TOP:
-        rotateCamera(this.camera, 0);
-        rotateCamera(this.camera, Math.PI / 2, Axes.X);
-        break;
-      case ViewRotation.BOTTOM:
-        rotateCamera(this.camera, 0);
-        rotateCamera(this.camera, -Math.PI / 2, Axes.X);
-        break;
-      case ViewRotation.RIGHT:
-        rotateCamera(this.camera, Math.PI / 2);
-        break;
-      case ViewRotation.LEFT:
-        rotateCamera(this.camera, -Math.PI / 2);
-        break;
-      case ViewRotation.FRONT:
-        rotateCamera(this.camera, 0);
-        break;
-      case ViewRotation.BACK:
-        rotateCamera(this.camera, Math.PI);
-        break;
-    }
-  });
 
   /**
    * Adjust canvas size on windows resizing.

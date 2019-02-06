@@ -20,13 +20,13 @@ export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
  */
 export type GenericFunction<R = any> = (...args: any) => R;
 
-export enum ViewRotation {
-  TOP,
-  BOTTOM,
-  LEFT,
-  RIGHT,
-  FRONT,
-  BACK
+export enum COMMANDS {
+  CHANGE_VIEW_TO_TOP,
+  CHANGE_VIEW_TO_BOTTOM,
+  CHANGE_VIEW_TO_LEFT,
+  CHANGE_VIEW_TO_RIGHT,
+  CHANGE_VIEW_TO_FRONT,
+  CHANGE_VIEW_TO_BACK
 }
 
 export enum Axes {
@@ -121,27 +121,27 @@ export function rotateCamera(
 export function addCameraGizmo(scene: Scene) {
   const rightRedCube = createSimpleCube(0x9c4c4c);
   rightRedCube.position.x += 1;
-  rightRedCube.userData = { command: ViewRotation.RIGHT };
+  rightRedCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_RIGHT };
 
   const leftRedCube = createSimpleCube(0x926d6d);
   leftRedCube.position.x -= 1;
-  leftRedCube.userData = { command: ViewRotation.LEFT };
+  leftRedCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_LEFT };
 
   const frontBlueCube = createSimpleCube(0x0000ff);
   frontBlueCube.position.z += 1;
-  frontBlueCube.userData = { command: ViewRotation.FRONT };
+  frontBlueCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_FRONT };
 
   const backBlueCube = createSimpleCube(0x4c74c5);
   backBlueCube.position.z -= 1;
-  backBlueCube.userData = { command: ViewRotation.BACK };
+  backBlueCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_BACK };
 
   const topGreenCube = createSimpleCube(0x00ff00);
   topGreenCube.position.y += 1;
-  topGreenCube.userData = { command: ViewRotation.TOP };
+  topGreenCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_TOP };
 
   const bottomGreenCube = createSimpleCube(0xc6f5c6);
   bottomGreenCube.position.y -= 1;
-  bottomGreenCube.userData = { command: ViewRotation.BOTTOM };
+  bottomGreenCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_BOTTOM };
 
   scene.add(rightRedCube);
   scene.add(leftRedCube);
@@ -150,3 +150,36 @@ export function addCameraGizmo(scene: Scene) {
   scene.add(topGreenCube);
   scene.add(bottomGreenCube);
 }
+
+/**
+ * Triggers defined actions according to the command.
+ * @param camera camera to react to actions.
+ * @param command action to execute.
+ */
+export const gizmoAction: (
+  camera: PerspectiveCamera,
+  command: COMMANDS
+) => void = debounce(100, (camera, command) => {
+  switch (command) {
+    case COMMANDS.CHANGE_VIEW_TO_TOP:
+      rotateCamera(camera, 0);
+      rotateCamera(camera, Math.PI / 2, Axes.X);
+      break;
+    case COMMANDS.CHANGE_VIEW_TO_BOTTOM:
+      rotateCamera(camera, 0);
+      rotateCamera(camera, -Math.PI / 2, Axes.X);
+      break;
+    case COMMANDS.CHANGE_VIEW_TO_RIGHT:
+      rotateCamera(camera, Math.PI / 2);
+      break;
+    case COMMANDS.CHANGE_VIEW_TO_LEFT:
+      rotateCamera(camera, -Math.PI / 2);
+      break;
+    case COMMANDS.CHANGE_VIEW_TO_FRONT:
+      rotateCamera(camera, 0);
+      break;
+    case COMMANDS.CHANGE_VIEW_TO_BACK:
+      rotateCamera(camera, Math.PI);
+      break;
+  }
+});
