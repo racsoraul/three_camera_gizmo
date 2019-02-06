@@ -21,7 +21,7 @@ enum Axes {
   Z
 }
 
-const RANGE = 40;
+const RANGE = 70;
 const ORIGIN = new Vector3(0, 0, 0);
 
 class App extends Component<IProps> {
@@ -84,17 +84,24 @@ class App extends Component<IProps> {
       frontBlueCube.position.z += 15;
       frontBlueCube.userData = { command: ViewRotation.FRONT };
 
+      const backBlueCube = this.createSimpleCube(0x4c74c5);
+      backBlueCube.position.z -= 15;
+      backBlueCube.userData = { command: ViewRotation.BACK };
+
       const topGreenCube = this.createSimpleCube(0x00ff00);
       topGreenCube.position.y += 15;
       topGreenCube.userData = { command: ViewRotation.TOP };
 
+      const bottomGreenCube = this.createSimpleCube(0xc6f5c6);
+      bottomGreenCube.position.y -= 15;
+      bottomGreenCube.userData = { command: ViewRotation.BOTTOM };
+
       this.scene.add(rightRedCube);
       this.scene.add(leftRedCube);
-      this.scene.add(topGreenCube);
       this.scene.add(frontBlueCube);
-
-      const axesHelper = new THREE.AxesHelper(40);
-      this.scene.add(axesHelper);
+      this.scene.add(backBlueCube);
+      this.scene.add(topGreenCube);
+      this.scene.add(bottomGreenCube);
 
       this.animate();
     }
@@ -195,9 +202,12 @@ class App extends Component<IProps> {
   private gizmoAction = debounce(100, (command: ViewRotation) => {
     switch (command) {
       case ViewRotation.TOP:
+        this.rotateCamera(0);
         this.rotateCamera(Math.PI / 2, Axes.X);
+        break;
       case ViewRotation.BOTTOM:
-        console.log("ROTATE BOTTOM");
+        this.rotateCamera(0);
+        this.rotateCamera(-Math.PI / 2, Axes.X);
         break;
       case ViewRotation.RIGHT:
         this.rotateCamera(Math.PI / 2);
@@ -207,6 +217,9 @@ class App extends Component<IProps> {
         break;
       case ViewRotation.FRONT:
         this.rotateCamera(0);
+        break;
+      case ViewRotation.BACK:
+        this.rotateCamera(Math.PI);
         break;
     }
   });
