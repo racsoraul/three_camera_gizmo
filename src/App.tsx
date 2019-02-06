@@ -2,27 +2,17 @@ import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
 import OrbitControls from "three-orbitcontrols";
-import { debounce } from "./utils";
-import { Vector3 } from "three";
+import {
+  CAMERA_DISTANCE,
+  CAMERA_FOCUS_POINT,
+  debounce,
+  rotateCamera,
+  ViewRotation,
+  Axes,
+  addCameraGizmo
+} from "./utils";
 
 interface IProps {}
-enum ViewRotation {
-  TOP,
-  BOTTOM,
-  LEFT,
-  RIGHT,
-  FRONT,
-  BACK
-}
-
-enum Axes {
-  X,
-  Y,
-  Z
-}
-
-const RANGE = 70;
-const ORIGIN = new Vector3(0, 0, 0);
 
 class App extends Component<IProps> {
   private containerRef = React.createRef<HTMLDivElement>();
@@ -66,42 +56,13 @@ class App extends Component<IProps> {
       this.containerRef.current.appendChild(this.renderer.domElement);
 
       this.camera = new THREE.PerspectiveCamera(45, aspect, 1, 10000);
-      this.camera.position.set(0, 0, RANGE * 2);
-      this.camera.lookAt(ORIGIN);
+      this.camera.position.set(0, 0, CAMERA_DISTANCE);
+      this.camera.lookAt(CAMERA_FOCUS_POINT);
 
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
       this.controls.enableKeys = false;
 
-      const rightRedCube = this.createSimpleCube(0x9c4c4c);
-      rightRedCube.position.x += 15;
-      rightRedCube.userData = { command: ViewRotation.RIGHT };
-
-      const leftRedCube = this.createSimpleCube(0x926d6d);
-      leftRedCube.position.x -= 15;
-      leftRedCube.userData = { command: ViewRotation.LEFT };
-
-      const frontBlueCube = this.createSimpleCube(0x0000ff);
-      frontBlueCube.position.z += 15;
-      frontBlueCube.userData = { command: ViewRotation.FRONT };
-
-      const backBlueCube = this.createSimpleCube(0x4c74c5);
-      backBlueCube.position.z -= 15;
-      backBlueCube.userData = { command: ViewRotation.BACK };
-
-      const topGreenCube = this.createSimpleCube(0x00ff00);
-      topGreenCube.position.y += 15;
-      topGreenCube.userData = { command: ViewRotation.TOP };
-
-      const bottomGreenCube = this.createSimpleCube(0xc6f5c6);
-      bottomGreenCube.position.y -= 15;
-      bottomGreenCube.userData = { command: ViewRotation.BOTTOM };
-
-      this.scene.add(rightRedCube);
-      this.scene.add(leftRedCube);
-      this.scene.add(frontBlueCube);
-      this.scene.add(backBlueCube);
-      this.scene.add(topGreenCube);
-      this.scene.add(bottomGreenCube);
+      addCameraGizmo(this.scene);
 
       this.animate();
     }
@@ -140,86 +101,33 @@ class App extends Component<IProps> {
   };
 
   /**
-   * Rotates the camera around the specified `axis` the amount
-   * of degrees specified.
-   * @param angle Degrees to rotate.
-   * @param axis Axis to rotate around. Default `Axes.Y`.
-   */
-  private rotateCamera(angle: number, axis: Axes = Axes.Y) {
-    this.camera.position.y = 0;
-    let z = 2 * RANGE,
-      y = 0,
-      x = 0;
-
-    switch (axis) {
-      case Axes.X:
-        this.camera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
-        this.camera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
-        break;
-      case Axes.Y:
-        this.camera.position.x = x * Math.cos(angle) + z * Math.sin(angle);
-        this.camera.position.z = z * Math.cos(angle) - x * Math.sin(angle);
-        break;
-      case Axes.Z:
-        throw Error(
-          "Unsupported rotation. Currently there's no reason to rotate around the Z axis."
-        );
-    }
-
-    this.camera.lookAt(ORIGIN);
-  }
-
-  /**
    * Stop rendering.
    */
   private stop() {
     window.cancelAnimationFrame(this.frameId);
   }
 
-  /**
-   * Returns cube of the specified color. Dimensions are:
-   * `width = 15`
-   * `height = 15`
-   * `depth = 15`
-   * @param color hex number.
-   */
-  private createSimpleCube(color: number = 0xffffff): THREE.Mesh {
-    const geometry = new THREE.BoxGeometry(15, 15, 15);
-    const material = new THREE.MeshBasicMaterial({ color });
-    const mesh = new THREE.Mesh(geometry, material);
-
-    // Add wireframe
-    const edgesGeometry = new THREE.EdgesGeometry(mesh.geometry);
-    const edgesMaterial = new THREE.LineBasicMaterial({
-      color: 0xababab,
-      linewidth: 2.5
-    });
-    const edgesMesh = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-
-    return mesh.add(edgesMesh);
-  }
-
   private gizmoAction = debounce(100, (command: ViewRotation) => {
     switch (command) {
       case ViewRotation.TOP:
-        this.rotateCamera(0);
-        this.rotateCamera(Math.PI / 2, Axes.X);
+        rotateCamera(this.camera, 0);
+        rotateCamera(this.camera, Math.PI / 2, Axes.X);
         break;
       case ViewRotation.BOTTOM:
-        this.rotateCamera(0);
-        this.rotateCamera(-Math.PI / 2, Axes.X);
+        rotateCamera(this.camera, 0);
+        rotateCamera(this.camera, -Math.PI / 2, Axes.X);
         break;
       case ViewRotation.RIGHT:
-        this.rotateCamera(Math.PI / 2);
+        rotateCamera(this.camera, Math.PI / 2);
         break;
       case ViewRotation.LEFT:
-        this.rotateCamera(-Math.PI / 2);
+        rotateCamera(this.camera, -Math.PI / 2);
         break;
       case ViewRotation.FRONT:
-        this.rotateCamera(0);
+        rotateCamera(this.camera, 0);
         break;
       case ViewRotation.BACK:
-        this.rotateCamera(Math.PI);
+        rotateCamera(this.camera, Math.PI);
         break;
     }
   });
