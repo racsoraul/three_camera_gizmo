@@ -11,7 +11,7 @@ import {
 } from "three";
 
 /** How far from the origin the camera will be. */
-export const CAMERA_DISTANCE = 100;
+export const CAMERA_DISTANCE = 10;
 /** Where the camera must keep looking at. */
 export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
 
@@ -58,13 +58,13 @@ export const debounce: <R>(
 
 /**
  * Returns cube of the specified color. Dimensions are:
- * `width = 15`
- * `height = 15`
- * `depth = 15`
+ * `width = 1`
+ * `height = 1`
+ * `depth = 1`
  * @param color hex number.
  */
 export function createSimpleCube(color: number = 0xffffff): Mesh {
-  const geometry = new BoxGeometry(15, 15, 15);
+  const geometry = new BoxGeometry(1, 1, 1);
   const material = new MeshBasicMaterial({ color });
   const mesh = new Mesh(geometry, material);
 
@@ -82,7 +82,7 @@ export function createSimpleCube(color: number = 0xffffff): Mesh {
 /**
  * Rotates the camera around the specified `axis` the amount
  * of degrees specified.
- * @param camera camera to rotate.
+ * @param camera camera to rotate around.
  * @param angle degrees to rotate.
  * @param axis axis to rotate around. Default `Axes.Y`.
  */
@@ -120,27 +120,27 @@ export function rotateCamera(
  */
 export function addCameraGizmo(scene: Scene) {
   const rightRedCube = createSimpleCube(0x9c4c4c);
-  rightRedCube.position.x += 15;
+  rightRedCube.position.x += 1;
   rightRedCube.userData = { command: ViewRotation.RIGHT };
 
   const leftRedCube = createSimpleCube(0x926d6d);
-  leftRedCube.position.x -= 15;
+  leftRedCube.position.x -= 1;
   leftRedCube.userData = { command: ViewRotation.LEFT };
 
   const frontBlueCube = createSimpleCube(0x0000ff);
-  frontBlueCube.position.z += 15;
+  frontBlueCube.position.z += 1;
   frontBlueCube.userData = { command: ViewRotation.FRONT };
 
   const backBlueCube = createSimpleCube(0x4c74c5);
-  backBlueCube.position.z -= 15;
+  backBlueCube.position.z -= 1;
   backBlueCube.userData = { command: ViewRotation.BACK };
 
   const topGreenCube = createSimpleCube(0x00ff00);
-  topGreenCube.position.y += 15;
+  topGreenCube.position.y += 1;
   topGreenCube.userData = { command: ViewRotation.TOP };
 
   const bottomGreenCube = createSimpleCube(0xc6f5c6);
-  bottomGreenCube.position.y -= 15;
+  bottomGreenCube.position.y -= 1;
   bottomGreenCube.userData = { command: ViewRotation.BOTTOM };
 
   scene.add(rightRedCube);
