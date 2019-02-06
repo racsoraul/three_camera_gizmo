@@ -41,7 +41,7 @@ export enum Axes {
  * the interval stablished.
  *
  * @template R type of return of the function to debounce. Default `any`.
- * @param ms Interval of time to wait for next invocation of the function.
+ * @param ms interval of time to wait for next invocation of the function.
  * By default value is `500`.
  * @param fn function, accepting any number of arguments, to debounce.
  */
@@ -83,8 +83,8 @@ export function createSimpleCube(color: number = 0xffffff): Mesh {
  * Rotates the camera around the specified `axis` the amount
  * of degrees specified.
  * @param camera camera to rotate.
- * @param angle Degrees to rotate.
- * @param axis Axis to rotate around. Default `Axes.Y`.
+ * @param angle degrees to rotate.
+ * @param axis axis to rotate around. Default `Axes.Y`.
  */
 export function rotateCamera(
   camera: PerspectiveCamera,
@@ -116,7 +116,7 @@ export function rotateCamera(
 
 /**
  * Adds a camera gizmo to the specified scene.
- * @param scene Scene to add the camera gizmo.
+ * @param scene scene to add the camera gizmo.
  */
 export function addCameraGizmo(scene: Scene) {
   const rightRedCube = createSimpleCube(0x9c4c4c);

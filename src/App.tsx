@@ -43,6 +43,17 @@ class App extends Component<IProps> {
     this.isMouseDown = false;
   }
 
+  public render() {
+    return (
+      <div className="App">
+        <h1>
+          Object Picking - Test to get the <span>gizmo</span> working
+        </h1>
+        <div id="gizmo" ref={this.containerRef} />
+      </div>
+    );
+  }
+
   public componentDidMount() {
     if (this.containerRef.current) {
       this.containerRef.current.addEventListener("mousemove", this.onMouseMove);
@@ -69,18 +80,10 @@ class App extends Component<IProps> {
   }
 
   public componentWillUnmount() {
-    this.stop();
-  }
-
-  public render() {
-    return (
-      <div className="App">
-        <h1>
-          Object Picking - Test to get the <span>gizmo</span> working
-        </h1>
-        <div id="gizmo" ref={this.containerRef} />
-      </div>
-    );
+    window.cancelAnimationFrame(this.frameId);
+    window.removeEventListener("resize", this.onWindowsResize, false);
+    window.removeEventListener("mousedown", this.onMouseDown, false);
+    window.removeEventListener("mouseup", this.onMouseUp, false);
   }
 
   /**
@@ -99,13 +102,6 @@ class App extends Component<IProps> {
 
     this.renderer.render(this.scene, this.camera);
   };
-
-  /**
-   * Stop rendering.
-   */
-  private stop() {
-    window.cancelAnimationFrame(this.frameId);
-  }
 
   private gizmoAction = debounce(100, (command: ViewRotation) => {
     switch (command) {
