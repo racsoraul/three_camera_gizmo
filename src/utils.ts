@@ -236,6 +236,18 @@ function onMouseMove(mouse: IMouse, gizmoRect: ClientRect) {
   };
 }
 
+function onTouchStart(mouse: IMouse) {
+  return function touchStart() {
+    mouse.isDown = true;
+  };
+}
+
+function onTouchEnd(mouse: IMouse) {
+  return function touchEnd() {
+    mouse.isDown = false;
+  };
+}
+
 function onMouseDown(mouse: IMouse) {
   return function mouseDown() {
     mouse.isDown = true;
@@ -294,9 +306,13 @@ export function setupCameraGizmo(
     const mouseMovement = onMouseMove(mouse, gizmoRect);
     const mouseDown = onMouseDown(mouse);
     const mouseUp = onMouseUp(mouse);
+    const touchStart = onTouchStart(mouse);
+    const touchEnd = onTouchEnd(mouse);
     gizmoContainer.addEventListener("mousemove", mouseMovement);
     gizmoContainer.addEventListener("mousedown", mouseDown);
     gizmoContainer.addEventListener("mouseup", mouseUp);
+    gizmoContainer.addEventListener("touchstart", touchStart);
+    gizmoContainer.addEventListener("touchend", touchEnd);
 
     const aspect = gizmoRect.width / gizmoRect.height;
     gizmoRenderer.setSize(gizmoRect.width, gizmoRect.height);
@@ -352,6 +368,8 @@ function animateGizmo(
     const intersects = raycaster.intersectObjects(gizmoScene.children);
 
     if (typeof intersects[0] !== "undefined" && mouse.isDown) {
+      console.log(mouse.isDown);
+
       gizmoAction(sceneCamera, intersects[0].object.userData.command);
     }
 
