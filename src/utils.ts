@@ -7,7 +7,8 @@ import {
   EdgesGeometry,
   LineBasicMaterial,
   LineSegments,
-  Scene
+  Scene,
+  WebGLRenderer
 } from "three";
 
 /** How far from the origin the camera will be. */
@@ -19,6 +20,10 @@ export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
  * Generic function type.
  */
 export type GenericFunction<R = any> = (...args: any) => R;
+/**
+ * Re-renders the gizmo scene on every frame.
+ */
+export type AnimateGizmo = () => void;
 
 export enum COMMANDS {
   CHANGE_VIEW_TO_TOP,
@@ -189,3 +194,69 @@ export const gizmoAction: (
       break;
   }
 });
+
+export function setupCameraGizmo(
+  sceneContainer: HTMLDivElement,
+  sceneCamera: PerspectiveCamera,
+  cameraLength: number = 5
+): AnimateGizmo {
+  const parentNode = sceneContainer.parentNode;
+  if (parentNode) {
+    const sceneRect = sceneContainer.getBoundingClientRect();
+
+    const gizmoContainer = document.createElement("div");
+    gizmoContainer.id = "gizmo";
+    gizmoContainer.style.position = "absolute";
+    gizmoContainer.style.width = "10%";
+    gizmoContainer.style.height = "10%";
+    gizmoContainer.style.top = `${sceneRect.top}px`;
+    gizmoContainer.style.left = `${sceneRect.left}px`;
+
+    parentNode.appendChild(gizmoContainer);
+
+    const gizmoRenderer = new WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      devicePixelRatio: window.devicePixelRatio
+    });
+    const gizmoRect = gizmoContainer.getBoundingClientRect();
+    const aspect = gizmoRect.width / gizmoRect.height;
+    gizmoRenderer.setSize(gizmoRect.width, gizmoRect.height);
+    gizmoContainer.appendChild(gizmoRenderer.domElement);
+
+    const gizmoScene = new Scene();
+    addCameraGizmo(gizmoScene);
+
+    const gizmoCamera = new PerspectiveCamera(45, aspect, 1, 100);
+    gizmoCamera.up = sceneCamera.up;
+
+    return animateGizmo(gizmoRenderer, gizmoScene, gizmoCamera, sceneCamera);
+  } else {
+    throw Error("There isn't a valid parent node for the gizmo container.");
+  }
+}
+
+/**
+ * Updates the gizmo on each frame to follow the new position of the scene camera.
+ * @param gizmoRenderer WebGLRender for the gizmo.
+ * @param gizmoScene scene to show the gizmo.
+ * @param gizmoCamera gizmo camera.
+ * @param sceneCamera scene camera to track.
+ * @param focusPoint focus point of the gizmo camera. Default (0, 0, 0).
+ * @returns function that executes the re-rendering logic.
+ */
+function animateGizmo(
+  gizmoRenderer: WebGLRenderer,
+  gizmoScene: Scene,
+  gizmoCamera: PerspectiveCamera,
+  sceneCamera: PerspectiveCamera,
+  focusPoint: Vector3 = CAMERA_FOCUS_POINT
+) {
+  return () => {
+    gizmoCamera.position.copy(sceneCamera.position);
+    gizmoCamera.position.setLength(5);
+
+    gizmoCamera.lookAt(focusPoint);
+    gizmoRenderer.render(gizmoScene, gizmoCamera);
+  };
+}

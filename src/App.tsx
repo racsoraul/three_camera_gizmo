@@ -8,7 +8,9 @@ import {
   debounce,
   addCameraGizmo,
   gizmoAction,
-  createCube
+  createCube,
+  setupCameraGizmo,
+  AnimateGizmo
 } from "./utils";
 
 interface IProps {}
@@ -20,11 +22,8 @@ class App extends Component<IProps> {
   private camera!: THREE.PerspectiveCamera;
   private controls!: THREE.OrbitControls;
   private frameId: number;
+  private animateGizmo!: AnimateGizmo;
 
-  private gizmoRef = React.createRef<HTMLDivElement>();
-  private gizmoRenderer: THREE.WebGLRenderer;
-  private gizmoScene: THREE.Scene;
-  private gizmoCamera!: THREE.PerspectiveCamera;
   private raycaster: THREE.Raycaster;
   private mouse: THREE.Vector2;
   private isMouseDown: boolean;
@@ -42,12 +41,6 @@ class App extends Component<IProps> {
     this.frameId = 0;
     this.raycaster = new THREE.Raycaster();
 
-    this.gizmoRenderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true,
-      devicePixelRatio: window.devicePixelRatio
-    });
-    this.gizmoScene = new THREE.Scene();
     this.mouse = new THREE.Vector2(-1, -1);
     this.isMouseDown = false;
   }
@@ -56,16 +49,15 @@ class App extends Component<IProps> {
     return (
       <div className="App">
         <h1>
-          Object Picking - Test to get the <span>gizmo</span> working
+          Test Scene - Getting the <span>gizmo</span> to work
         </h1>
         <div id="scene" ref={this.containerRef} />
-        <div id="gizmo" ref={this.gizmoRef} />
       </div>
     );
   }
 
   public componentDidMount() {
-    if (this.containerRef.current && this.gizmoRef.current) {
+    if (this.containerRef.current) {
       this.containerRef.current.addEventListener("mousemove", this.onMouseMove);
       this.containerRef.current.addEventListener(
         "mousedown",
@@ -93,23 +85,13 @@ class App extends Component<IProps> {
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
       this.controls.enableKeys = false;
 
-      const rect = this.containerRef.current.getBoundingClientRect();
-      this.gizmoRef.current.style.top = `${rect.top + 3}px`;
-      this.gizmoRef.current.style.left = `${rect.left + 3}px`;
-
-      this.gizmoRenderer.setSize(
-        this.gizmoRef.current.clientWidth,
-        this.gizmoRef.current.clientHeight
-      );
-      this.gizmoRef.current.appendChild(this.gizmoRenderer.domElement);
-
-      this.gizmoCamera = new THREE.PerspectiveCamera(45, aspect, 1, 100);
-      this.gizmoCamera.up = this.camera.up;
-
-      addCameraGizmo(this.gizmoScene);
-
       const cube = createCube(0xa25b5b);
       this.scene.add(cube);
+
+      this.animateGizmo = setupCameraGizmo(
+        this.containerRef.current,
+        this.camera
+      );
 
       this.animate();
     }
@@ -146,14 +128,8 @@ class App extends Component<IProps> {
       gizmoAction(this.camera, intersects[0].object.userData.command);
     }
 
-    this.gizmoCamera.position.copy(this.camera.position);
-    this.gizmoCamera.position.sub(this.controls.target);
-    this.gizmoCamera.position.setLength(5);
-
-    this.gizmoCamera.lookAt(this.scene.position);
-
     this.renderer.render(this.scene, this.camera);
-    this.gizmoRenderer.render(this.gizmoScene, this.gizmoCamera);
+    this.animateGizmo();
   };
 
   /**
