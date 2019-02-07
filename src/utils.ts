@@ -208,6 +208,20 @@ const gizmoAction: (
   }
 });
 
+function onMouseMove(mouseCoordinates: Vector2, gizmoRect: ClientRect) {
+  return function mouseMovement(event: MouseEvent) {
+    /**
+     * Calculate mouse position in normalized device coordinates
+     * (-1 to +1) for both components.
+     */
+    mouseCoordinates.x =
+      ((event.clientX - gizmoRect.left) / gizmoRect.width) * 2 - 1;
+    mouseCoordinates.y =
+      -((event.clientY - gizmoRect.top) / gizmoRect.height) * 2 + 1;
+    console.log(`${event.clientX},${event.clientY}`, mouseCoordinates);
+  };
+}
+
 /**
  * Setups the camera gizmo for a given scene container. Returns two functions:
  *  - to re-render the gizmo on every frame.
@@ -223,6 +237,7 @@ export function setupCameraGizmo(
 ): IGizmoManager {
   const raycaster = new Raycaster();
   const mouseCoordinates = new Vector2(-1, -1);
+
   const parentNode = sceneContainer.parentNode;
   if (parentNode) {
     const sceneRect = sceneContainer.getBoundingClientRect();
@@ -243,6 +258,11 @@ export function setupCameraGizmo(
       devicePixelRatio: window.devicePixelRatio
     });
     const gizmoRect = gizmoContainer.getBoundingClientRect();
+
+    console.log(gizmoRect);
+    const mouseMovement = onMouseMove(mouseCoordinates, gizmoRect);
+    gizmoContainer.addEventListener("mousemove", mouseMovement);
+
     const aspect = gizmoRect.width / gizmoRect.height;
     gizmoRenderer.setSize(gizmoRect.width, gizmoRect.height);
     gizmoContainer.appendChild(gizmoRenderer.domElement);

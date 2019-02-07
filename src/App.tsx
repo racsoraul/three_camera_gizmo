@@ -48,7 +48,6 @@ class App extends Component<IProps> {
 
   public componentDidMount() {
     if (this.containerRef.current) {
-      // this.containerRef.current.addEventListener("mousemove", this.onMouseMove);
       // this.containerRef.current.addEventListener(
       //   "mousedown",
       //   this.onMouseDown,
@@ -129,18 +128,6 @@ class App extends Component<IProps> {
       this.renderer.setSize(containerWidth, containerHeight);
     }
   });
-
-  // private onMouseMove = (event: MouseEvent) => {
-  //   /**
-  //    * Calculate mouse position in normalized device coordinates
-  //    * (-1 to +1) for both components.
-  //    */
-  //   if (this.containerRef.current) {
-  //     const rect = this.containerRef.current.getBoundingClientRect();
-  //     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  //     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  //   }
-  // };
 
   // private onMouseDown = () => {
   //   this.isMouseDown = true;
