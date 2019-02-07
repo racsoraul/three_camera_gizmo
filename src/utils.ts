@@ -23,7 +23,7 @@ export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
  */
 type GenericFunction<R = any> = (...args: any) => R;
 
-type RenderCameraGizmo = (scene: Scene) => void;
+type RenderCameraGizmo = () => void;
 type DestoyCameraGizmo = () => void;
 
 /**
@@ -32,7 +32,7 @@ type DestoyCameraGizmo = () => void;
 export interface IGizmoManager {
   /** Re-renders the gizmo scene on every frame. */
   renderCameraGizmo: RenderCameraGizmo;
-  /** Removes the DOM node of the gizmo and removes mouse listeners. */
+  /** Removes the DOM node of the gizmo and removes mouse listeners with it. */
   destroyCameraGizmo: DestoyCameraGizmo;
 }
 
@@ -176,7 +176,7 @@ function addGizmoHandler(scene: Scene) {
 }
 
 /**
- * Triggers defined actions according to the command.
+ * Triggers actions according to the command.
  * @param camera camera to react to actions.
  * @param command action to execute.
  */
@@ -208,6 +208,13 @@ const gizmoAction: (
   }
 });
 
+/**
+ * Listener to keep track of the mouse position in the gizmo scene. It
+ * converts the mouse coordinates to a normalized device coordinates
+ * (-1 to +1).
+ * @param mouseCoordinates mouse coordinates relative to the gizmo scene.
+ * @param gizmoRect gizmo DOM node dimensions.
+ */
 function onMouseMove(mouseCoordinates: Vector2, gizmoRect: ClientRect) {
   return function mouseMovement(event: MouseEvent) {
     /**
@@ -218,8 +225,15 @@ function onMouseMove(mouseCoordinates: Vector2, gizmoRect: ClientRect) {
       ((event.clientX - gizmoRect.left) / gizmoRect.width) * 2 - 1;
     mouseCoordinates.y =
       -((event.clientY - gizmoRect.top) / gizmoRect.height) * 2 + 1;
-    console.log(`${event.clientX},${event.clientY}`, mouseCoordinates);
   };
+}
+
+function onMouseDown() {
+  // isMouseDown = true;
+}
+
+function onMouseUp() {
+  // isMouseDown = false;
 }
 
 /**
@@ -239,7 +253,14 @@ export function setupCameraGizmo(
   const mouseCoordinates = new Vector2(-1, -1);
 
   const parentNode = sceneContainer.parentNode;
+
   if (parentNode) {
+    const gizmoRenderer = new WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      devicePixelRatio: window.devicePixelRatio
+    });
+
     const sceneRect = sceneContainer.getBoundingClientRect();
 
     const gizmoContainer = document.createElement("div");
@@ -252,14 +273,8 @@ export function setupCameraGizmo(
 
     parentNode.appendChild(gizmoContainer);
 
-    const gizmoRenderer = new WebGLRenderer({
-      alpha: true,
-      antialias: true,
-      devicePixelRatio: window.devicePixelRatio
-    });
     const gizmoRect = gizmoContainer.getBoundingClientRect();
 
-    console.log(gizmoRect);
     const mouseMovement = onMouseMove(mouseCoordinates, gizmoRect);
     gizmoContainer.addEventListener("mousemove", mouseMovement);
 
@@ -283,9 +298,7 @@ export function setupCameraGizmo(
         sceneCamera,
         cameraLength
       ),
-      destroyCameraGizmo: () => {
-        // TODO: unmount gizmo DOM node and remove mouse listeners from scene node.
-      }
+      destroyCameraGizmo: () => gizmoContainer.remove()
     };
   } else {
     throw Error("There isn't a valid parent node for the gizmo container.");
@@ -314,9 +327,9 @@ function animateGizmo(
   length: number,
   focusPoint: Vector3 = new Vector3(0, 0, 0)
 ): RenderCameraGizmo {
-  return (scene: Scene) => {
+  return () => {
     raycaster.setFromCamera(mouseCoordinates, gizmoCamera);
-    const intersects = raycaster.intersectObjects(scene.children);
+    const intersects = raycaster.intersectObjects(gizmoScene.children);
 
     if (typeof intersects[0] !== "undefined" && true /*isMouseDown*/) {
       gizmoAction(sceneCamera, intersects[0].object.userData.command);

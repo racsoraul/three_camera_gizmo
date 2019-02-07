@@ -48,16 +48,6 @@ class App extends Component<IProps> {
 
   public componentDidMount() {
     if (this.containerRef.current) {
-      // this.containerRef.current.addEventListener(
-      //   "mousedown",
-      //   this.onMouseDown,
-      //   false
-      // );
-      // this.containerRef.current.addEventListener(
-      //   "mouseup",
-      //   this.onMouseUp,
-      //   false
-      // );
       const containerWidth = this.containerRef.current.clientWidth;
       const containerHeight = this.containerRef.current.clientHeight;
       const aspect = containerWidth / containerHeight;
@@ -74,8 +64,10 @@ class App extends Component<IProps> {
       this.controls = new OrbitControls(this.camera, this.containerRef.current);
       this.controls.enableKeys = false;
 
-      const cube = createCube(0xa25b5b);
+      const cube = createCube(0x000000);
+      const axes = new THREE.AxesHelper(2);
       this.scene.add(cube);
+      this.scene.add(axes);
 
       this.gizmoManager = setupCameraGizmo(
         this.containerRef.current,
@@ -89,19 +81,6 @@ class App extends Component<IProps> {
   public componentWillUnmount() {
     window.cancelAnimationFrame(this.frameId);
     window.removeEventListener("resize", this.onWindowsResize, false);
-
-    // if (this.containerRef.current) {
-    //   this.containerRef.current.removeEventListener(
-    //     "mousedown",
-    //     this.onMouseDown,
-    //     false
-    //   );
-    //   this.containerRef.current.removeEventListener(
-    //     "mouseup",
-    //     this.onMouseUp,
-    //     false
-    //   );
-    // }
     this.gizmoManager.destroyCameraGizmo();
   }
 
@@ -110,9 +89,8 @@ class App extends Component<IProps> {
    */
   private animate = () => {
     this.frameId = window.requestAnimationFrame(this.animate);
-
     this.renderer.render(this.scene, this.camera);
-    this.gizmoManager.renderCameraGizmo(this.scene);
+    this.gizmoManager.renderCameraGizmo();
   };
 
   /**
@@ -128,14 +106,6 @@ class App extends Component<IProps> {
       this.renderer.setSize(containerWidth, containerHeight);
     }
   });
-
-  // private onMouseDown = () => {
-  //   this.isMouseDown = true;
-  // };
-
-  // private onMouseUp = () => {
-  //   this.isMouseDown = false;
-  // };
 }
 
 export default App;
