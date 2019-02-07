@@ -48,17 +48,17 @@ class App extends Component<IProps> {
 
   public componentDidMount() {
     if (this.containerRef.current) {
-      this.containerRef.current.addEventListener("mousemove", this.onMouseMove);
-      this.containerRef.current.addEventListener(
-        "mousedown",
-        this.onMouseDown,
-        false
-      );
-      this.containerRef.current.addEventListener(
-        "mouseup",
-        this.onMouseUp,
-        false
-      );
+      // this.containerRef.current.addEventListener("mousemove", this.onMouseMove);
+      // this.containerRef.current.addEventListener(
+      //   "mousedown",
+      //   this.onMouseDown,
+      //   false
+      // );
+      // this.containerRef.current.addEventListener(
+      //   "mouseup",
+      //   this.onMouseUp,
+      //   false
+      // );
       const containerWidth = this.containerRef.current.clientWidth;
       const containerHeight = this.containerRef.current.clientHeight;
       const aspect = containerWidth / containerHeight;
@@ -90,20 +90,20 @@ class App extends Component<IProps> {
   public componentWillUnmount() {
     window.cancelAnimationFrame(this.frameId);
     window.removeEventListener("resize", this.onWindowsResize, false);
-    this.gizmoManager.destroyCameraGizmo();
 
-    if (this.containerRef.current) {
-      this.containerRef.current.removeEventListener(
-        "mousedown",
-        this.onMouseDown,
-        false
-      );
-      this.containerRef.current.removeEventListener(
-        "mouseup",
-        this.onMouseUp,
-        false
-      );
-    }
+    // if (this.containerRef.current) {
+    //   this.containerRef.current.removeEventListener(
+    //     "mousedown",
+    //     this.onMouseDown,
+    //     false
+    //   );
+    //   this.containerRef.current.removeEventListener(
+    //     "mouseup",
+    //     this.onMouseUp,
+    //     false
+    //   );
+    // }
+    this.gizmoManager.destroyCameraGizmo();
   }
 
   /**
@@ -130,25 +130,25 @@ class App extends Component<IProps> {
     }
   });
 
-  private onMouseMove = (event: MouseEvent) => {
-    /**
-     * Calculate mouse position in normalized device coordinates
-     * (-1 to +1) for both components.
-     */
-    if (this.containerRef.current) {
-      const rect = this.containerRef.current.getBoundingClientRect();
-      this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    }
-  };
+  // private onMouseMove = (event: MouseEvent) => {
+  //   /**
+  //    * Calculate mouse position in normalized device coordinates
+  //    * (-1 to +1) for both components.
+  //    */
+  //   if (this.containerRef.current) {
+  //     const rect = this.containerRef.current.getBoundingClientRect();
+  //     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  //     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  //   }
+  // };
 
-  private onMouseDown = () => {
-    this.isMouseDown = true;
-  };
+  // private onMouseDown = () => {
+  //   this.isMouseDown = true;
+  // };
 
-  private onMouseUp = () => {
-    this.isMouseDown = false;
-  };
+  // private onMouseUp = () => {
+  //   this.isMouseDown = false;
+  // };
 }
 
 export default App;

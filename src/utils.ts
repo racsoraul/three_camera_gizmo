@@ -21,7 +21,7 @@ export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
 /**
  * Generic function type.
  */
-export type GenericFunction<R = any> = (...args: any) => R;
+type GenericFunction<R = any> = (...args: any) => R;
 
 type RenderCameraGizmo = (scene: Scene) => void;
 type DestoyCameraGizmo = () => void;
@@ -108,7 +108,7 @@ export function createCube(
  * @param angle degrees to rotate.
  * @param axis axis to rotate around. Default `Axes.Y`.
  */
-export function rotateCamera(
+function rotateCamera(
   camera: PerspectiveCamera,
   angle: number,
   axis: Axes = Axes.Y
@@ -142,7 +142,7 @@ export function rotateCamera(
  * Adds gizmo handlers to the specified scene.
  * @param scene scene to add the camera gizmo.
  */
-export function addCameraGizmo(scene: Scene) {
+function addGizmoHandler(scene: Scene) {
   const rightRedCube = createCube(0x9c4c4c);
   rightRedCube.position.x += 1;
   rightRedCube.userData = { command: COMMANDS.CHANGE_VIEW_TO_RIGHT };
@@ -248,7 +248,7 @@ export function setupCameraGizmo(
     gizmoContainer.appendChild(gizmoRenderer.domElement);
 
     const gizmoScene = new Scene();
-    addCameraGizmo(gizmoScene);
+    addGizmoHandler(gizmoScene);
 
     const gizmoCamera = new PerspectiveCamera(45, aspect, 1, 100);
     gizmoCamera.up = sceneCamera.up;

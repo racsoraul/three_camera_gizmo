@@ -24,10 +24,3 @@
   border-style: solid;
   border-color: #484b50;
 }
-
-#gizmo {
-  position: absolute;
-  width: 10%;
-  height: 10%;
-  background-color: rgba(255, 255, 255, 0.1);
-}
