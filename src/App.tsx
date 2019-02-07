@@ -25,7 +25,6 @@ class App extends Component<IProps> {
   constructor(props: IProps) {
     super(props);
     window.addEventListener("resize", this.onWindowsResize, false);
-
     this.renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -79,8 +78,8 @@ class App extends Component<IProps> {
   }
 
   public componentWillUnmount() {
-    window.cancelAnimationFrame(this.frameId);
     window.removeEventListener("resize", this.onWindowsResize, false);
+    window.cancelAnimationFrame(this.frameId);
     this.gizmoManager.destroyCameraGizmo();
   }
 

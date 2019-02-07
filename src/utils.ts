@@ -27,6 +27,14 @@ type RenderCameraGizmo = () => void;
 type DestoyCameraGizmo = () => void;
 
 /**
+ * State of the mouse.
+ */
+interface IMouse {
+  coordinates: Vector2;
+  isDown: boolean;
+}
+
+/**
  * Utilities to handle the lifecycle of the camera gizmo.
  */
 export interface IGizmoManager {
@@ -215,25 +223,29 @@ const gizmoAction: (
  * @param mouseCoordinates mouse coordinates relative to the gizmo scene.
  * @param gizmoRect gizmo DOM node dimensions.
  */
-function onMouseMove(mouseCoordinates: Vector2, gizmoRect: ClientRect) {
+function onMouseMove(mouse: IMouse, gizmoRect: ClientRect) {
   return function mouseMovement(event: MouseEvent) {
     /**
      * Calculate mouse position in normalized device coordinates
      * (-1 to +1) for both components.
      */
-    mouseCoordinates.x =
+    mouse.coordinates.x =
       ((event.clientX - gizmoRect.left) / gizmoRect.width) * 2 - 1;
-    mouseCoordinates.y =
+    mouse.coordinates.y =
       -((event.clientY - gizmoRect.top) / gizmoRect.height) * 2 + 1;
   };
 }
 
-function onMouseDown() {
-  // isMouseDown = true;
+function onMouseDown(mouse: IMouse) {
+  return function mouseDown() {
+    mouse.isDown = true;
+  };
 }
 
-function onMouseUp() {
-  // isMouseDown = false;
+function onMouseUp(mouse: IMouse) {
+  return function mouseUp() {
+    mouse.isDown = false;
+  };
 }
 
 /**
@@ -250,7 +262,10 @@ export function setupCameraGizmo(
   cameraLength: number = 5
 ): IGizmoManager {
   const raycaster = new Raycaster();
-  const mouseCoordinates = new Vector2(-1, -1);
+  const mouse = {
+    coordinates: new Vector2(-1, -1),
+    isDown: false
+  };
 
   const parentNode = sceneContainer.parentNode;
 
@@ -268,6 +283,7 @@ export function setupCameraGizmo(
     gizmoContainer.style.position = "absolute";
     gizmoContainer.style.width = "10%";
     gizmoContainer.style.height = "10%";
+    gizmoContainer.style.margin = "5px";
     gizmoContainer.style.top = `${sceneRect.top}px`;
     gizmoContainer.style.left = `${sceneRect.left}px`;
 
@@ -275,8 +291,12 @@ export function setupCameraGizmo(
 
     const gizmoRect = gizmoContainer.getBoundingClientRect();
 
-    const mouseMovement = onMouseMove(mouseCoordinates, gizmoRect);
+    const mouseMovement = onMouseMove(mouse, gizmoRect);
+    const mouseDown = onMouseDown(mouse);
+    const mouseUp = onMouseUp(mouse);
     gizmoContainer.addEventListener("mousemove", mouseMovement);
+    gizmoContainer.addEventListener("mousedown", mouseDown);
+    gizmoContainer.addEventListener("mouseup", mouseUp);
 
     const aspect = gizmoRect.width / gizmoRect.height;
     gizmoRenderer.setSize(gizmoRect.width, gizmoRect.height);
@@ -291,7 +311,7 @@ export function setupCameraGizmo(
     return {
       renderCameraGizmo: animateGizmo(
         raycaster,
-        mouseCoordinates,
+        mouse,
         gizmoRenderer,
         gizmoScene,
         gizmoCamera,
@@ -308,7 +328,7 @@ export function setupCameraGizmo(
 /**
  * Updates the gizmo on each frame to follow the new position of the scene camera.
  * @param raycaster ray casted to the gizmo canvas.
- * @param mouseCoordinates coordinates of the mouse relative to the gizmo canvas.
+ * @param mouse state of the mouse relative to the gizmo canvas.
  * @param gizmoRenderer WebGLRender for the gizmo.
  * @param gizmoScene scene to show the gizmo.
  * @param gizmoCamera gizmo camera.
@@ -319,7 +339,7 @@ export function setupCameraGizmo(
  */
 function animateGizmo(
   raycaster: Raycaster,
-  mouseCoordinates: Vector2,
+  mouse: IMouse,
   gizmoRenderer: WebGLRenderer,
   gizmoScene: Scene,
   gizmoCamera: PerspectiveCamera,
@@ -328,10 +348,10 @@ function animateGizmo(
   focusPoint: Vector3 = new Vector3(0, 0, 0)
 ): RenderCameraGizmo {
   return () => {
-    raycaster.setFromCamera(mouseCoordinates, gizmoCamera);
+    raycaster.setFromCamera(mouse.coordinates, gizmoCamera);
     const intersects = raycaster.intersectObjects(gizmoScene.children);
 
-    if (typeof intersects[0] !== "undefined" && true /*isMouseDown*/) {
+    if (typeof intersects[0] !== "undefined" && mouse.isDown) {
       gizmoAction(sceneCamera, intersects[0].object.userData.command);
     }
 
