@@ -6,11 +6,9 @@ import {
   CAMERA_DISTANCE,
   CAMERA_FOCUS_POINT,
   debounce,
-  addCameraGizmo,
-  gizmoAction,
   createCube,
   setupCameraGizmo,
-  AnimateGizmo
+  IGizmoManager
 } from "./utils";
 
 interface IProps {}
@@ -22,11 +20,7 @@ class App extends Component<IProps> {
   private camera!: THREE.PerspectiveCamera;
   private controls!: THREE.OrbitControls;
   private frameId: number;
-  private animateGizmo!: AnimateGizmo;
-
-  private raycaster: THREE.Raycaster;
-  private mouse: THREE.Vector2;
-  private isMouseDown: boolean;
+  private gizmoManager!: IGizmoManager;
 
   constructor(props: IProps) {
     super(props);
@@ -39,17 +33,13 @@ class App extends Component<IProps> {
     });
     this.scene = new THREE.Scene();
     this.frameId = 0;
-    this.raycaster = new THREE.Raycaster();
-
-    this.mouse = new THREE.Vector2(-1, -1);
-    this.isMouseDown = false;
   }
 
   public render() {
     return (
       <div className="App">
         <h1>
-          Test Scene - Getting the <span>gizmo</span> to work
+          Usage of the <span>camera gizmo</span> with a simple scene.
         </h1>
         <div id="scene" ref={this.containerRef} />
       </div>
@@ -88,7 +78,7 @@ class App extends Component<IProps> {
       const cube = createCube(0xa25b5b);
       this.scene.add(cube);
 
-      this.animateGizmo = setupCameraGizmo(
+      this.gizmoManager = setupCameraGizmo(
         this.containerRef.current,
         this.camera
       );
@@ -100,6 +90,8 @@ class App extends Component<IProps> {
   public componentWillUnmount() {
     window.cancelAnimationFrame(this.frameId);
     window.removeEventListener("resize", this.onWindowsResize, false);
+    this.gizmoManager.destroyCameraGizmo();
+
     if (this.containerRef.current) {
       this.containerRef.current.removeEventListener(
         "mousedown",
@@ -120,16 +112,8 @@ class App extends Component<IProps> {
   private animate = () => {
     this.frameId = window.requestAnimationFrame(this.animate);
 
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    const intersects = this.raycaster.intersectObjects(this.scene.children);
-
-    if (typeof intersects[0] !== "undefined" && this.isMouseDown) {
-      gizmoAction(this.camera, intersects[0].object.userData.command);
-    }
-
     this.renderer.render(this.scene, this.camera);
-    this.animateGizmo();
+    this.gizmoManager.renderCameraGizmo(this.scene);
   };
 
   /**

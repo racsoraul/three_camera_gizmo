@@ -8,7 +8,9 @@ import {
   LineBasicMaterial,
   LineSegments,
   Scene,
-  WebGLRenderer
+  WebGLRenderer,
+  Vector2,
+  Raycaster
 } from "three";
 
 /** How far from the origin the camera will be. */
@@ -20,10 +22,19 @@ export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
  * Generic function type.
  */
 export type GenericFunction<R = any> = (...args: any) => R;
+
+type RenderCameraGizmo = (scene: Scene) => void;
+type DestoyCameraGizmo = () => void;
+
 /**
- * Re-renders the gizmo scene on every frame.
+ * Utilities to handle the lifecycle of the camera gizmo.
  */
-export type AnimateGizmo = () => void;
+export interface IGizmoManager {
+  /** Re-renders the gizmo scene on every frame. */
+  renderCameraGizmo: RenderCameraGizmo;
+  /** Removes the DOM node of the gizmo and removes mouse listeners. */
+  destroyCameraGizmo: DestoyCameraGizmo;
+}
 
 export enum COMMANDS {
   CHANGE_VIEW_TO_TOP,
@@ -62,11 +73,11 @@ export const debounce: <R>(
 };
 
 /**
- * Returns cube of the specified color. Default dimensions are:
- * `width = 1`
- * `height = 1`
- * `depth = 1`
+ * Returns a cube of the specified color and dimensions.
  * @param color hex number.
+ * @param width width of the cube. Default `1`.
+ * @param height height of the cube. Default `1`.
+ * @param depth depth of the cube. Default `1`.
  */
 export function createCube(
   color: number = 0xffffff,
@@ -91,7 +102,7 @@ export function createCube(
 }
 
 /**
- * Rotates the camera around the specified `axis` the amount
+ * Rotates the camera around the given `axis` the amount
  * of degrees specified.
  * @param camera camera to rotate around.
  * @param angle degrees to rotate.
@@ -103,6 +114,7 @@ export function rotateCamera(
   axis: Axes = Axes.Y
 ) {
   camera.position.y = 0;
+  // TODO: make CAMERA_DISTANCE injected explicitly.
   let z = CAMERA_DISTANCE,
     y = 0,
     x = 0;
@@ -122,11 +134,12 @@ export function rotateCamera(
       );
   }
 
+  // TODO: make CAMERA_FOCUS_POINT injected explicitly.
   camera.lookAt(CAMERA_FOCUS_POINT);
 }
 
 /**
- * Adds a camera gizmo to the specified scene.
+ * Adds gizmo handlers to the specified scene.
  * @param scene scene to add the camera gizmo.
  */
 export function addCameraGizmo(scene: Scene) {
@@ -167,7 +180,7 @@ export function addCameraGizmo(scene: Scene) {
  * @param camera camera to react to actions.
  * @param command action to execute.
  */
-export const gizmoAction: (
+const gizmoAction: (
   camera: PerspectiveCamera,
   command: COMMANDS
 ) => void = debounce(100, (camera, command) => {
@@ -195,11 +208,21 @@ export const gizmoAction: (
   }
 });
 
+/**
+ * Setups the camera gizmo for a given scene container. Returns two functions:
+ *  - to re-render the gizmo on every frame.
+ *  - to remove the event mouse event listeners attached to the gizmo DOM node.
+ * @param sceneContainer DOM node where the scene will be mounted.
+ * @param sceneCamera camera of scene to track.
+ * @param cameraLength how far the gizmo camera will be. Default `5`.
+ */
 export function setupCameraGizmo(
   sceneContainer: HTMLDivElement,
   sceneCamera: PerspectiveCamera,
   cameraLength: number = 5
-): AnimateGizmo {
+): IGizmoManager {
+  const raycaster = new Raycaster();
+  const mouseCoordinates = new Vector2(-1, -1);
   const parentNode = sceneContainer.parentNode;
   if (parentNode) {
     const sceneRect = sceneContainer.getBoundingClientRect();
@@ -230,7 +253,20 @@ export function setupCameraGizmo(
     const gizmoCamera = new PerspectiveCamera(45, aspect, 1, 100);
     gizmoCamera.up = sceneCamera.up;
 
-    return animateGizmo(gizmoRenderer, gizmoScene, gizmoCamera, sceneCamera);
+    return {
+      renderCameraGizmo: animateGizmo(
+        raycaster,
+        mouseCoordinates,
+        gizmoRenderer,
+        gizmoScene,
+        gizmoCamera,
+        sceneCamera,
+        cameraLength
+      ),
+      destroyCameraGizmo: () => {
+        // TODO: unmount gizmo DOM node and remove mouse listeners from scene node.
+      }
+    };
   } else {
     throw Error("There isn't a valid parent node for the gizmo container.");
   }
@@ -238,23 +274,36 @@ export function setupCameraGizmo(
 
 /**
  * Updates the gizmo on each frame to follow the new position of the scene camera.
+ * @param raycaster ray casted to the gizmo canvas.
+ * @param mouseCoordinates coordinates of the mouse relative to the gizmo canvas.
  * @param gizmoRenderer WebGLRender for the gizmo.
  * @param gizmoScene scene to show the gizmo.
  * @param gizmoCamera gizmo camera.
  * @param sceneCamera scene camera to track.
+ * @param length how far the gizmo camera will be.
  * @param focusPoint focus point of the gizmo camera. Default (0, 0, 0).
  * @returns function that executes the re-rendering logic.
  */
 function animateGizmo(
+  raycaster: Raycaster,
+  mouseCoordinates: Vector2,
   gizmoRenderer: WebGLRenderer,
   gizmoScene: Scene,
   gizmoCamera: PerspectiveCamera,
   sceneCamera: PerspectiveCamera,
-  focusPoint: Vector3 = CAMERA_FOCUS_POINT
-) {
-  return () => {
+  length: number,
+  focusPoint: Vector3 = new Vector3(0, 0, 0)
+): RenderCameraGizmo {
+  return (scene: Scene) => {
+    raycaster.setFromCamera(mouseCoordinates, gizmoCamera);
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    if (typeof intersects[0] !== "undefined" && true /*isMouseDown*/) {
+      gizmoAction(sceneCamera, intersects[0].object.userData.command);
+    }
+
     gizmoCamera.position.copy(sceneCamera.position);
-    gizmoCamera.position.setLength(5);
+    gizmoCamera.position.setLength(length);
 
     gizmoCamera.lookAt(focusPoint);
     gizmoRenderer.render(gizmoScene, gizmoCamera);
