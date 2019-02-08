@@ -249,8 +249,16 @@ function onTouchMove(mouse: IMouse, gizmoRect: ClientRect) {
   };
 }
 
-function onTouchStart(mouse: IMouse) {
-  return function touchStart() {
+function onTouchStart(mouse: IMouse, gizmoRect: ClientRect) {
+  return function touchStart(event: TouchEvent) {
+    /**
+     * Update coordinates "before detecting" the touch.
+     */
+    mouse.coordinates.x =
+      ((event.touches[0].clientX - gizmoRect.left) / gizmoRect.width) * 2 - 1;
+    mouse.coordinates.y =
+      -((event.touches[0].clientY - gizmoRect.top) / gizmoRect.height) * 2 + 1;
+
     mouse.isDown = true;
   };
 }
@@ -320,7 +328,7 @@ export function setupCameraGizmo(
     const mouseDown = onMouseDown(mouse);
     const mouseUp = onMouseUp(mouse);
     const touchMove = onTouchMove(mouse, gizmoRect);
-    const touchStart = onTouchStart(mouse);
+    const touchStart = onTouchStart(mouse, gizmoRect);
     const touchEnd = onTouchEnd(mouse);
     gizmoContainer.addEventListener("mousemove", mouseMovement);
     gizmoContainer.addEventListener("mousedown", mouseDown);
@@ -383,7 +391,6 @@ function animateGizmo(
     const intersects = raycaster.intersectObjects(gizmoScene.children);
 
     if (typeof intersects[0] !== "undefined" && mouse.isDown) {
-      console.log(mouse.isDown, mouse.coordinates);
       gizmoAction(sceneCamera, intersects[0].object.userData.command);
     }
 
