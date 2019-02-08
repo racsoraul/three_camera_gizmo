@@ -13,11 +13,6 @@ import {
   Raycaster
 } from "three";
 
-/** How far from the origin the camera will be. */
-export const CAMERA_DISTANCE = 6;
-/** Where the camera must keep looking at. */
-export const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
-
 /**
  * Generic function type.
  */
@@ -112,29 +107,30 @@ export function createCube(
 /**
  * Rotates the camera around the given `axis` the amount
  * of degrees specified.
- * @param camera camera to rotate around.
+ * @param sceneCamera camera to rotate around.
+ * @param sceneCameraDistance distance from the focus point of scene.
  * @param angle degrees to rotate.
  * @param axis axis to rotate around. Default `Axes.Y`.
  */
 function rotateCamera(
-  camera: PerspectiveCamera,
+  sceneCamera: PerspectiveCamera,
+  sceneCameraDistance: number,
   angle: number,
   axis: Axes = Axes.Y
 ) {
-  camera.position.y = 0;
-  // TODO: make CAMERA_DISTANCE injected explicitly.
-  let z = CAMERA_DISTANCE,
+  sceneCamera.position.y = 0;
+  let z = sceneCameraDistance,
     y = 0,
     x = 0;
 
   switch (axis) {
     case Axes.X:
-      camera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
-      camera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
+      sceneCamera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
+      sceneCamera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
       break;
     case Axes.Y:
-      camera.position.x = x * Math.cos(angle) + z * Math.sin(angle);
-      camera.position.z = z * Math.cos(angle) - x * Math.sin(angle);
+      sceneCamera.position.x = x * Math.cos(angle) + z * Math.sin(angle);
+      sceneCamera.position.z = z * Math.cos(angle) - x * Math.sin(angle);
       break;
     case Axes.Z:
       throw Error(
@@ -143,7 +139,7 @@ function rotateCamera(
   }
 
   // TODO: make CAMERA_FOCUS_POINT injected explicitly.
-  camera.lookAt(CAMERA_FOCUS_POINT);
+  sceneCamera.lookAt(new Vector3(0, 0, 0));
 }
 
 /**
@@ -185,33 +181,35 @@ function addGizmoHandler(scene: Scene) {
 
 /**
  * Triggers actions according to the command.
- * @param camera camera to react to actions.
+ * @param sceneCamera camera to react to actions.
+ * @param sceneCameraDistance distance from the focus point of scene.
  * @param command action to execute.
  */
 const gizmoAction: (
-  camera: PerspectiveCamera,
+  sceneCamera: PerspectiveCamera,
+  sceneCameraDistance: number,
   command: COMMANDS
-) => void = debounce(100, (camera, command) => {
+) => void = debounce(100, (sceneCamera, sceneCameraDistance, command) => {
   switch (command) {
     case COMMANDS.CHANGE_VIEW_TO_TOP:
-      rotateCamera(camera, 0);
-      rotateCamera(camera, Math.PI / 2, Axes.X);
+      rotateCamera(sceneCamera, sceneCameraDistance, 0);
+      rotateCamera(sceneCamera, sceneCameraDistance, Math.PI / 2, Axes.X);
       break;
     case COMMANDS.CHANGE_VIEW_TO_BOTTOM:
-      rotateCamera(camera, 0);
-      rotateCamera(camera, -Math.PI / 2, Axes.X);
+      rotateCamera(sceneCamera, sceneCameraDistance, 0);
+      rotateCamera(sceneCamera, sceneCameraDistance, -Math.PI / 2, Axes.X);
       break;
     case COMMANDS.CHANGE_VIEW_TO_RIGHT:
-      rotateCamera(camera, Math.PI / 2);
+      rotateCamera(sceneCamera, sceneCameraDistance, Math.PI / 2);
       break;
     case COMMANDS.CHANGE_VIEW_TO_LEFT:
-      rotateCamera(camera, -Math.PI / 2);
+      rotateCamera(sceneCamera, sceneCameraDistance, -Math.PI / 2);
       break;
     case COMMANDS.CHANGE_VIEW_TO_FRONT:
-      rotateCamera(camera, 0);
+      rotateCamera(sceneCamera, sceneCameraDistance, 0);
       break;
     case COMMANDS.CHANGE_VIEW_TO_BACK:
-      rotateCamera(camera, Math.PI);
+      rotateCamera(sceneCamera, sceneCameraDistance, Math.PI);
       break;
   }
 });
@@ -287,12 +285,16 @@ function onMouseUp(mouse: IMouse) {
  *  - to remove the event mouse event listeners attached to the gizmo DOM node.
  * @param sceneContainer DOM node where the scene will be mounted.
  * @param sceneCamera camera of scene to track.
- * @param cameraLength how far the gizmo camera will be. Default `5`.
+ * @param sceneCameraDistance distance of camera from the focus point of scene.
+ * @param sceneCameraFocusPoint focus point of the camera.
+ * @param gizmoCameraDistance How close the gizmo will look like. Default `5`.
  */
 export function setupCameraGizmo(
   sceneContainer: HTMLDivElement,
   sceneCamera: PerspectiveCamera,
-  cameraLength: number = 5
+  sceneCameraDistance: number,
+  sceneCameraFocusPoint: Vector3,
+  gizmoCameraDistance: number = 5
 ): IGizmoManager {
   const raycaster = new Raycaster();
   const mouse = {
@@ -354,8 +356,10 @@ export function setupCameraGizmo(
         gizmoRenderer,
         gizmoScene,
         gizmoCamera,
+        gizmoCameraDistance,
         sceneCamera,
-        cameraLength
+        sceneCameraDistance,
+        sceneCameraFocusPoint
       ),
       destroyCameraGizmo: () => gizmoContainer.remove()
     };
@@ -371,9 +375,10 @@ export function setupCameraGizmo(
  * @param gizmoRenderer WebGLRender for the gizmo.
  * @param gizmoScene scene to show the gizmo.
  * @param gizmoCamera gizmo camera.
+ * @param gizmoCameraDistance how far the gizmo camera will be.
  * @param sceneCamera scene camera to track.
- * @param length how far the gizmo camera will be.
- * @param focusPoint focus point of the gizmo camera. Default (0, 0, 0).
+ * @param sceneCameraDistance distance from the focus point of scene.
+ * @param focusPoint focus point of the gizmo camera..
  * @returns function that executes the re-rendering logic.
  */
 function animateGizmo(
@@ -382,20 +387,25 @@ function animateGizmo(
   gizmoRenderer: WebGLRenderer,
   gizmoScene: Scene,
   gizmoCamera: PerspectiveCamera,
+  gizmoCameraDistance: number,
   sceneCamera: PerspectiveCamera,
-  length: number,
-  focusPoint: Vector3 = new Vector3(0, 0, 0)
+  sceneCameraDistance: number,
+  focusPoint: Vector3
 ): RenderCameraGizmo {
   return () => {
     raycaster.setFromCamera(mouse.coordinates, gizmoCamera);
     const intersects = raycaster.intersectObjects(gizmoScene.children);
 
     if (typeof intersects[0] !== "undefined" && mouse.isDown) {
-      gizmoAction(sceneCamera, intersects[0].object.userData.command);
+      gizmoAction(
+        sceneCamera,
+        sceneCameraDistance,
+        intersects[0].object.userData.command
+      );
     }
 
     gizmoCamera.position.copy(sceneCamera.position);
-    gizmoCamera.position.setLength(length);
+    gizmoCamera.position.setLength(gizmoCameraDistance);
 
     gizmoCamera.lookAt(focusPoint);
     gizmoRenderer.render(gizmoScene, gizmoCamera);

@@ -2,18 +2,10 @@ import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
 import OrbitControls from "three-orbitcontrols";
-import {
-  CAMERA_DISTANCE,
-  CAMERA_FOCUS_POINT,
-  debounce,
-  createCube,
-  setupCameraGizmo,
-  IGizmoManager
-} from "./utils";
+import { debounce, createCube, setupCameraGizmo, IGizmoManager } from "./utils";
+import { Vector3 } from "three";
 
-interface IProps {}
-
-class App extends Component<IProps> {
+class App extends Component<{}> {
   private containerRef = React.createRef<HTMLDivElement>();
   private renderer: THREE.WebGLRenderer;
   private scene: THREE.Scene;
@@ -22,7 +14,7 @@ class App extends Component<IProps> {
   private frameId: number;
   private gizmoManager!: IGizmoManager;
 
-  constructor(props: IProps) {
+  constructor(props: {}) {
     super(props);
     window.addEventListener("resize", this.onWindowsResize, false);
     this.renderer = new THREE.WebGLRenderer({
@@ -47,6 +39,9 @@ class App extends Component<IProps> {
 
   public componentDidMount() {
     if (this.containerRef.current) {
+      const CAMERA_DISTANCE = 6;
+      const CAMERA_FOCUS_POINT = new Vector3(0, 0, 0);
+
       const containerWidth = this.containerRef.current.clientWidth;
       const containerHeight = this.containerRef.current.clientHeight;
       const aspect = containerWidth / containerHeight;
@@ -70,7 +65,9 @@ class App extends Component<IProps> {
 
       this.gizmoManager = setupCameraGizmo(
         this.containerRef.current,
-        this.camera
+        this.camera,
+        CAMERA_DISTANCE,
+        CAMERA_FOCUS_POINT
       );
 
       this.animate();
