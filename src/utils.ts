@@ -115,6 +115,7 @@ export function createCube(
 function rotateCamera(
   sceneCamera: PerspectiveCamera,
   sceneCameraDistance: number,
+  focusPoint: Vector3,
   angle: number,
   axis: Axes = Axes.Y
 ) {
@@ -138,8 +139,7 @@ function rotateCamera(
       );
   }
 
-  // TODO: make CAMERA_FOCUS_POINT injected explicitly.
-  sceneCamera.lookAt(new Vector3(0, 0, 0));
+  sceneCamera.lookAt(focusPoint);
 }
 
 /**
@@ -183,36 +183,63 @@ function addGizmoHandler(scene: Scene) {
  * Triggers actions according to the command.
  * @param sceneCamera camera to react to actions.
  * @param sceneCameraDistance distance from the focus point of scene.
+ * @param focusPoint focus point of the gizmo camera.
  * @param command action to execute.
  */
 const gizmoAction: (
   sceneCamera: PerspectiveCamera,
   sceneCameraDistance: number,
+  focusPoint: Vector3,
   command: COMMANDS
-) => void = debounce(100, (sceneCamera, sceneCameraDistance, command) => {
-  switch (command) {
-    case COMMANDS.CHANGE_VIEW_TO_TOP:
-      rotateCamera(sceneCamera, sceneCameraDistance, 0);
-      rotateCamera(sceneCamera, sceneCameraDistance, Math.PI / 2, Axes.X);
-      break;
-    case COMMANDS.CHANGE_VIEW_TO_BOTTOM:
-      rotateCamera(sceneCamera, sceneCameraDistance, 0);
-      rotateCamera(sceneCamera, sceneCameraDistance, -Math.PI / 2, Axes.X);
-      break;
-    case COMMANDS.CHANGE_VIEW_TO_RIGHT:
-      rotateCamera(sceneCamera, sceneCameraDistance, Math.PI / 2);
-      break;
-    case COMMANDS.CHANGE_VIEW_TO_LEFT:
-      rotateCamera(sceneCamera, sceneCameraDistance, -Math.PI / 2);
-      break;
-    case COMMANDS.CHANGE_VIEW_TO_FRONT:
-      rotateCamera(sceneCamera, sceneCameraDistance, 0);
-      break;
-    case COMMANDS.CHANGE_VIEW_TO_BACK:
-      rotateCamera(sceneCamera, sceneCameraDistance, Math.PI);
-      break;
+) => void = debounce(
+  75,
+  (
+    sceneCamera: PerspectiveCamera,
+    sceneCameraDistance: number,
+    focusPoint: Vector3,
+    command: COMMANDS
+  ) => {
+    switch (command) {
+      case COMMANDS.CHANGE_VIEW_TO_TOP:
+        rotateCamera(sceneCamera, sceneCameraDistance, focusPoint, 0);
+        rotateCamera(
+          sceneCamera,
+          sceneCameraDistance,
+          focusPoint,
+          Math.PI / 2,
+          Axes.X
+        );
+        break;
+      case COMMANDS.CHANGE_VIEW_TO_BOTTOM:
+        rotateCamera(sceneCamera, sceneCameraDistance, focusPoint, 0);
+        rotateCamera(
+          sceneCamera,
+          sceneCameraDistance,
+          focusPoint,
+          -Math.PI / 2,
+          Axes.X
+        );
+        break;
+      case COMMANDS.CHANGE_VIEW_TO_RIGHT:
+        rotateCamera(sceneCamera, sceneCameraDistance, focusPoint, Math.PI / 2);
+        break;
+      case COMMANDS.CHANGE_VIEW_TO_LEFT:
+        rotateCamera(
+          sceneCamera,
+          sceneCameraDistance,
+          focusPoint,
+          -Math.PI / 2
+        );
+        break;
+      case COMMANDS.CHANGE_VIEW_TO_FRONT:
+        rotateCamera(sceneCamera, sceneCameraDistance, focusPoint, 0);
+        break;
+      case COMMANDS.CHANGE_VIEW_TO_BACK:
+        rotateCamera(sceneCamera, sceneCameraDistance, focusPoint, Math.PI);
+        break;
+    }
   }
-});
+);
 
 /**
  * Listener to keep track of the mouse position in the gizmo scene. It
@@ -234,6 +261,13 @@ function onMouseMove(mouse: IMouse, gizmoRect: ClientRect) {
   };
 }
 
+/**
+ * Listener to keep track of the finger position in the gizmo scene. It
+ * converts the coordinates to a normalized device coordinates
+ * (-1 to +1).
+ * @param mouseCoordinates mouse coordinates relative to the gizmo scene.
+ * @param gizmoRect gizmo DOM node dimensions.
+ */
 function onTouchMove(mouse: IMouse, gizmoRect: ClientRect) {
   return function mouseMovement(event: TouchEvent) {
     /**
@@ -349,6 +383,7 @@ export function setupCameraGizmo(
     const gizmoCamera = new PerspectiveCamera(45, aspect, 1, 100);
     gizmoCamera.up = sceneCamera.up;
 
+    //TODO: return function to trigger on window resizing to adjust gizmo positioning.
     return {
       renderCameraGizmo: animateGizmo(
         raycaster,
@@ -378,7 +413,7 @@ export function setupCameraGizmo(
  * @param gizmoCameraDistance how far the gizmo camera will be.
  * @param sceneCamera scene camera to track.
  * @param sceneCameraDistance distance from the focus point of scene.
- * @param focusPoint focus point of the gizmo camera..
+ * @param focusPoint focus point of the gizmo camera.
  * @returns function that executes the re-rendering logic.
  */
 function animateGizmo(
@@ -400,6 +435,7 @@ function animateGizmo(
       gizmoAction(
         sceneCamera,
         sceneCameraDistance,
+        focusPoint,
         intersects[0].object.userData.command
       );
     }
