@@ -16,7 +16,7 @@ self.__precacheManifest = [
     "url": "/racsoraul/three_camera_gizmo/static/css/main.4aa6987e.chunk.css"
   },
   {
-    "revision": "1fc39cea21c30fbd9c342843f48b64b0",
+    "revision": "36be3c43ae000ad908c1a86706b6ddd2",
     "url": "/racsoraul/three_camera_gizmo/index.html"
   }
 ];

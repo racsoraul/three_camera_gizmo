@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/racsoraul/three_camera_gizmo/precache-manifest.155eadca46ae40d4d851c478ce09911c.js"
+  "/racsoraul/three_camera_gizmo/precache-manifest.7c72e2962192b87fb045dcad2c64910f.js"
 );
 
 workbox.clientsClaim();
