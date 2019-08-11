@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/racsoraul/three_camera_gizmo/precache-manifest.7c72e2962192b87fb045dcad2c64910f.js"
+  "/three_camera_gizmo/precache-manifest.87e8afbc109108b7b9d941004f574598.js"
 );
 
 workbox.clientsClaim();
@@ -28,7 +28,7 @@ self.__precacheManifest = [].concat(self.__precacheManifest || []);
 workbox.precaching.suppressWarnings();
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
 
-workbox.routing.registerNavigationRoute("/racsoraul/three_camera_gizmo/index.html", {
+workbox.routing.registerNavigationRoute("/three_camera_gizmo/index.html", {
   
   blacklist: [/^\/_/,/\/[^\/]+\.[^\/]+$/],
 });

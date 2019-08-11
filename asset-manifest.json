@@ -1,13 +1,13 @@
 {
-  "main.css": "/racsoraul/three_camera_gizmo/static/css/main.4aa6987e.chunk.css",
-  "main.js": "/racsoraul/three_camera_gizmo/static/js/main.f172dc44.chunk.js",
-  "main.js.map": "/racsoraul/three_camera_gizmo/static/js/main.f172dc44.chunk.js.map",
-  "static/js/1.1f1c1d99.chunk.js": "/racsoraul/three_camera_gizmo/static/js/1.1f1c1d99.chunk.js",
-  "static/js/1.1f1c1d99.chunk.js.map": "/racsoraul/three_camera_gizmo/static/js/1.1f1c1d99.chunk.js.map",
-  "runtime~main.js": "/racsoraul/three_camera_gizmo/static/js/runtime~main.69a66c1e.js",
-  "runtime~main.js.map": "/racsoraul/three_camera_gizmo/static/js/runtime~main.69a66c1e.js.map",
-  "static/css/main.4aa6987e.chunk.css.map": "/racsoraul/three_camera_gizmo/static/css/main.4aa6987e.chunk.css.map",
-  "index.html": "/racsoraul/three_camera_gizmo/index.html",
-  "precache-manifest.7c72e2962192b87fb045dcad2c64910f.js": "/racsoraul/three_camera_gizmo/precache-manifest.7c72e2962192b87fb045dcad2c64910f.js",
-  "service-worker.js": "/racsoraul/three_camera_gizmo/service-worker.js"
+  "main.css": "/three_camera_gizmo/static/css/main.4aa6987e.chunk.css",
+  "main.js": "/three_camera_gizmo/static/js/main.c340a523.chunk.js",
+  "main.js.map": "/three_camera_gizmo/static/js/main.c340a523.chunk.js.map",
+  "static/js/1.1f1c1d99.chunk.js": "/three_camera_gizmo/static/js/1.1f1c1d99.chunk.js",
+  "static/js/1.1f1c1d99.chunk.js.map": "/three_camera_gizmo/static/js/1.1f1c1d99.chunk.js.map",
+  "runtime~main.js": "/three_camera_gizmo/static/js/runtime~main.67b4965d.js",
+  "runtime~main.js.map": "/three_camera_gizmo/static/js/runtime~main.67b4965d.js.map",
+  "static/css/main.4aa6987e.chunk.css.map": "/three_camera_gizmo/static/css/main.4aa6987e.chunk.css.map",
+  "index.html": "/three_camera_gizmo/index.html",
+  "precache-manifest.87e8afbc109108b7b9d941004f574598.js": "/three_camera_gizmo/precache-manifest.87e8afbc109108b7b9d941004f574598.js",
+  "service-worker.js": "/three_camera_gizmo/service-worker.js"
 }
