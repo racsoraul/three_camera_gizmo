@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
 import OrbitControls from "three-orbitcontrols";
-import { debounce, createCube, setupCameraGizmo, IGizmoManager } from "./utils";
+import { debounce, createCube, setupCameraGizmo, IGizmoManager } from "./core";
 import { Vector3 } from "three";
 
 class App extends Component<{}> {
