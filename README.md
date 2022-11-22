@@ -5,6 +5,8 @@ A React.js + Three.js app with a basic 3D scene and a **rotation camera gizmo**.
 
 All the gizmo logic is in `src/core.ts`, and how to use it in `src/App.tsx`.
 
+Play with the [demo](https://racsoraul.github.io/three_camera_gizmo).
+
 ## What is the goal
 Creating a camera gizmo to rotate the scene to different views (front, back, right, left, top, down). This will become a npm package to be used in any scene. If it's used with a framework like React, Angular, Vue, etc. or vanilla JS, it'll work just fine.
 
